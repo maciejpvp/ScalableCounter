@@ -1,0 +1,36 @@
+services:
+  app:
+    build:
+      context: ./scalable_counter
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - APP_ENV=local
+      - DYNAMODB_ENDPOINT=http://dynamodb:8000
+      - AWS_REGION=eu-central-1
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+    depends_on:
+      dynamodb:
+        condition: service_healthy
+
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    ports:
+      - "8000:8000"
+    # Run with local storage persistence in /home/dynamodblocal/data
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data"
+    volumes:
+      - dynamodb_data:/home/dynamodblocal/data
+    working_dir: /home/dynamodblocal
+    healthcheck:
+      # DynamoDB returns HTTP 400 for root GET request when it is online
+      test: ["CMD-SHELL", "[ $$(curl -s -o /dev/null -I -w '%{http_code}' http://localhost:8000) -eq 400 ]"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  dynamodb_data:

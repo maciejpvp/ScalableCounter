@@ -1,0 +1,16 @@
+# Git & metadata
+.git
+.gitattributes
+.gitignore
+README.md
+
+# Build artifacts & local development files
+main
+tmp/
+.air.toml
+.env
+.env.*
+!.env.example
+
+# Test files
+*_test.go
