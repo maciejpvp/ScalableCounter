@@ -11,25 +11,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-// VideoRepository provides data access for Video items in DynamoDB
 type VideoRepository struct {
 	db *DB
 }
 
-// NewVideoRepository creates a new VideoRepository
 func NewVideoRepository(db *DB) *VideoRepository {
 	return &VideoRepository{
 		db: db,
 	}
 }
 
-// VideoRecord represents an item in our DynamoDB table
 type VideoRecord struct {
-	VideoID string `dynamodbav:"PK" json:"video_id"` // Partition Key changed to PK
+	VideoID string `dynamodbav:"PK" json:"video_id"`
 	Likes   int    `dynamodbav:"likes" json:"likes"`
 }
 
-// PutVideo inserts or replaces a video item
 func (r *VideoRepository) PutVideo(ctx context.Context, videoID string) (*VideoRecord, error) {
 	record := VideoRecord{
 		VideoID: fmt.Sprintf("VIDEO#%s", videoID),
@@ -42,20 +38,18 @@ func (r *VideoRepository) PutVideo(ctx context.Context, videoID string) (*VideoR
 	}
 
 	_, err = r.db.DynamoClient.PutItem(ctx, &dynamodb.PutItemInput{
-		TableName: aws.String("Videos"), // Replace with your actual table name
+		TableName: aws.String("Videos"),
 		Item:      item,
 	})
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &record, nil
 }
 
-// GetVideo reads a video item by its key
 func (r *VideoRepository) GetVideo(ctx context.Context, videoID string) (*VideoRecord, error) {
 	prefixedID := fmt.Sprintf("VIDEO#%s", videoID)
-	// Key query updated to use "PK"
 	key, err := attributevalue.MarshalMap(map[string]string{"PK": prefixedID})
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal key: %w", err)
@@ -70,7 +64,7 @@ func (r *VideoRepository) GetVideo(ctx context.Context, videoID string) (*VideoR
 	}
 
 	if result.Item == nil {
-		return nil, nil // Item not found
+		return nil, nil
 	}
 
 	var record VideoRecord
@@ -90,8 +84,8 @@ func (r *VideoRepository) IncrementVideoLikes(ctx context.Context, videoID strin
 	}
 
 	updateResult, err := r.db.DynamoClient.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		TableName: aws.String("Videos"),
-		Key:       key,
+		TableName:        aws.String("Videos"),
+		Key:              key,
 		UpdateExpression: aws.String("ADD likes :inc"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":inc": &types.AttributeValueMemberN{Value: strconv.Itoa(likes)},

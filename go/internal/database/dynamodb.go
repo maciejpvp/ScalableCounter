@@ -45,7 +45,6 @@ func NewDB(ctx context.Context) (*DB, error) {
 	return db, nil
 }
 
-// ensureTables creates required DynamoDB tables if they don't already exist.
 func (db *DB) ensureTables(ctx context.Context) error {
 	_, err := db.DynamoClient.CreateTable(ctx, &dynamodb.CreateTableInput{
 		TableName: aws.String("Videos"),
@@ -65,7 +64,6 @@ func (db *DB) ensureTables(ctx context.Context) error {
 	})
 
 	if err != nil {
-		// Ignore "table already exists" errors — that's fine.
 		var resourceInUse *types.ResourceInUseException
 		if errors.As(err, &resourceInUse) {
 			log.Println("Table 'Videos' already exists, skipping creation.")
@@ -78,9 +76,7 @@ func (db *DB) ensureTables(ctx context.Context) error {
 	return nil
 }
 
-// Health checks if the connection to DynamoDB is active
 func (db *DB) Health(ctx context.Context) map[string]string {
-	// We can try a simple operation like listing tables
 	_, err := db.DynamoClient.ListTables(ctx, &dynamodb.ListTablesInput{
 		Limit: aws.Int32(1),
 	})
@@ -95,5 +91,3 @@ func (db *DB) Health(ctx context.Context) map[string]string {
 		"type":   "dynamodb",
 	}
 }
-
-

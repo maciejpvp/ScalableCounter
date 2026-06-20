@@ -24,13 +24,11 @@ type Server struct {
 func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 
-	// Initialize database
 	db, err := database.NewDB(context.Background())
 	if err != nil {
 		log.Fatalf("failed to initialize database: %v", err)
 	}
 
-	// Initialize Video related dependencies
 	videoRepo := database.NewVideoRepository(db)
 	videoService := NewVideoService(videoRepo)
 	videoController := NewVideoController(videoService)
@@ -42,7 +40,6 @@ func NewServer() *http.Server {
 		videoService:    videoService,
 	}
 
-	// Declare Server config
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", NewServer.port),
 		Handler:      NewServer.RegisterRoutes(),
