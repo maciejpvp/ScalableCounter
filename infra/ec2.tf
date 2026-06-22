@@ -30,11 +30,11 @@ resource "aws_security_group" "ec2_sg" {
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description     = "HTTP"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb_sg.id]
   }
 
   ingress {
@@ -76,16 +76,16 @@ resource "aws_instance" "app_server" {
 
               usermod -aG docker ec2-user
 
-              aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 445567075183.dkr.ecr.eu-central-1.amazonaws.com
+              aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 646731024202.dkr.ecr.eu-central-1.amazonaws.com
 
-              docker pull 445567075183.dkr.ecr.eu-central-1.amazonaws.com/scalable-counter:latest
+              docker pull 646731024202.dkr.ecr.eu-central-1.amazonaws.com/scalable-counter:latest
 
               docker run -d \
                 -p 80:8080 \
                 -e AWS_REGION=eu-central-1 \
                 --name counter-app \
                 --restart always \
-                445567075183.dkr.ecr.eu-central-1.amazonaws.com/scalable-counter:latest
+                646731024202.dkr.ecr.eu-central-1.amazonaws.com/scalable-counter:latest
               EOF
 
   tags = {
