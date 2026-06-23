@@ -83,18 +83,79 @@ At 10 million requests per month, the 30-second buffer saves roughly **$6.30/mon
 
 ## Deploying the Infrastructure
 
-1. Initialize Terraform:
+### Step 1 — Create an ECR Repository (manual, one-time)
+
+Create the repository in the AWS Console or with the CLI:
+
 ```bash
-   cd infra
-   terraform init
+aws ecr create-repository \
+  --repository-name scalable-counter \
+  --region eu-central-1
+```
+
+Note the **repository URI** returned (e.g. `123456789012.dkr.ecr.eu-central-1.amazonaws.com/scalable-counter`).
+
+---
+
+### Step 2 — Build and Push the Docker Image
+
+Follow the **push commands** shown on the ECR repository page in the AWS Console, or run them manually:
+
+```bash
+# 1. Authenticate Docker to ECR
+aws ecr get-login-password --region eu-central-1 \
+  | docker login --username AWS --password-stdin \
+    <YOUR_ACCOUNT_ID>.dkr.ecr.eu-central-1.amazonaws.com
+
+# 2. Build the image (from the repo root)
+docker build -t scalable-counter ./go
+
+# 3. Tag it for ECR
+docker tag scalable-counter:latest \
+  <YOUR_ACCOUNT_ID>.dkr.ecr.eu-central-1.amazonaws.com/scalable-counter:latest
+
+# 4. Push
+docker push \
+  <YOUR_ACCOUNT_ID>.dkr.ecr.eu-central-1.amazonaws.com/scalable-counter:latest
+```
+
+Replace `<YOUR_ACCOUNT_ID>` with your 12-digit AWS account ID.
+
+---
+
+### Step 3 — Update `ec2.tf` with Your ECR URI
+
+Open `infra/ec2.tf` and replace every occurrence of the placeholder ECR registry URL in the `user_data` block with your actual repository URI from Step 1.
+
+The three lines to update are:
+
+```hcl
+# ECR login
+aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin <YOUR_ACCOUNT_ID>.dkr.ecr.eu-central-1.amazonaws.com
+
+# Pull
+docker pull <YOUR_ACCOUNT_ID>.dkr.ecr.eu-central-1.amazonaws.com/scalable-counter:latest
+
+# Run
+<YOUR_ACCOUNT_ID>.dkr.ecr.eu-central-1.amazonaws.com/scalable-counter:latest
+```
+
+---
+
+### Step 4 — Deploy with Terraform
+
+1. Initialize Terraform (only needed on first run or after provider changes):
+```bash
+cd infra
+terraform init
 ```
 
 2. Inspect the planned changes:
 ```bash
-   terraform plan
+terraform plan
 ```
 
 3. Deploy to AWS:
 ```bash
-   terraform apply
+terraform apply
 ```
