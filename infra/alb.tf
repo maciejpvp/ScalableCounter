@@ -87,6 +87,13 @@ resource "aws_lb_listener_rule" "video_rule" {
       values = ["/video", "/video/*"]
     }
   }
+
+  condition {
+    http_header {
+      http_header_name = "X-From-CloudFront"
+      values           = [random_password.cloudfront_secret.result]
+    }
+  }
 }
 
 resource "aws_lb_target_group_attachment" "video_tg_attach" {

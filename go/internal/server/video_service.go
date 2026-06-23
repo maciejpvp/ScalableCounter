@@ -23,7 +23,7 @@ func NewVideoService(repo *database.VideoRepository) *VideoService {
 	s := &VideoService{
 		repo:          repo,
 		likesBuffer:   make(map[string]int),
-		flushInterval: 1 * time.Second,
+		flushInterval: 30 * time.Second,
 		stopChan:      make(chan struct{}),
 	}
 	s.wg.Add(1)
